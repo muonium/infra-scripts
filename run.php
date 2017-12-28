@@ -27,6 +27,25 @@ class cron {
 		$this->_mail = new l\Mail();
 	}
 
+    function deleteFolder($userDir) {
+        if(!is_dir($userDir)) {
+            echo "Error : $userDir must be a valid directory.";
+            exit;
+        }
+        if(substr($userDir, strlen($userDir) - 1, 1) != '/') {
+            $userDir .= '/';
+        }
+        $files = glob($userDir . '*', GLOB_MARK);
+        foreach ($files as $file) {
+            if(is_dir($file)) {
+                self::deleteFolder($file);
+            } else {
+                unlink($file);
+            }
+        }
+        rmdir($userDir);
+    }
+    
 	function deleteUser($id_user) {
 		if(!is_numeric($id_user)) return false;
 
@@ -47,7 +66,8 @@ class cron {
 		$req = self::$_sql->prepare("DELETE FROM upgrade WHERE id_user = ?");
 		$req->execute([$id_user]);
 
-		shell_exec('rm -Rf '.NOVA.'/'.$id_user);
+        self::deleteFolder(NOVA.'/'.$id_user);
+        
 		return true;
 	}
 
@@ -227,9 +247,8 @@ class cron {
             } else {
                 echo '1 user deleted.';
             }
+            self::deleteUser($anID);
         }
-        self::deleteUser($anID);
-        
     }
     //END DELETE USER
 };
