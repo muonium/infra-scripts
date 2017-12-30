@@ -9,56 +9,39 @@ if($_SERVER['argc'] != 3 && $_SERVER['argc'] != 4) {
 }
 
 $isVerbose = (in_array("-v", $_SERVER['argv']) || in_array("--verbose", $_SERVER['argv'])) ? true : false;
+$argumentPosition = ($isVerbose) ? 2 : 1;
+$isNumberArgumentValid = (($isVerbose && $_SERVER['argc'] == 4) || (!$isVerbose && $_SERVER['argc'] == 3)) ? true : false;
 
-if(in_array("-u", $_SERVER['argv']) || in_array("--username", $_SERVER['argv'])) {
-    //delete by username
-    
-    $position = array_search("-u", $_SERVER['argv']);
-    if($position === FALSE) {
-        $position = array_search("--username", $_SERVER['argv']);
-    }
-    try {
-        $usernameValue = $_SERVER['argv'][$position+1];
+if(!$isNumberArgumentValid) {
+    $task->printHelpDeleteUser();
+    exit;
+}
+
+switch($_SERVER['argv'][$argumentPosition]) {
+            
+    case '-u':
+    case '--username':
+        $usernameValue = $_SERVER['argv'][$argumentPosition+1];
         $task->deleteByUsername($usernameValue, $isVerbose);
-    } catch(OutOfBoundsException $e) {
-        $task->printHelpDeleteUser();
-    }
-    exit;
-}
-
-if(in_array("-e", $_SERVER['argv']) || in_array("--email", $_SERVER['argv'])) {
-    //delete by email
-    
-    $position = array_search("-e", $_SERVER['argv']);
-    if($position === FALSE) {
-        $position = array_search("--email", $_SERVER['argv']);
-    }
-    try {
-        $emailValue = $_SERVER['argv'][$position+1];
+        break;
+        
+    case '-e':
+    case '--email':
+        $emailValue = $_SERVER['argv'][$argumentPosition+1];
         $task->deleteByEmail($emailValue, $isVerbose);
-    } catch(OutOfBoundsException $e) {
-        $task->printHelpDeleteUser();
-    }
-    exit;
-}
-
-if(in_array("-i", $_SERVER['argv']) || in_array("--id", $_SERVER['argv'])) {
-    //delete by ID
-    
-    $position = array_search("-i", $_SERVER['argv']);
-    if($position === FALSE) {
-        $position = array_search("--id", $_SERVER['argv']);
-    }
-    try {
-        $IDvalue = $_SERVER['argv'][$position+1];
+        break;
+        
+    case '-i':
+    case '--id':
+        $IDvalue = $_SERVER['argv'][$argumentPosition+1];
         $task->deleteByID($IDvalue, $isVerbose);
-    } catch(OutOfBoundsException $e) {
+        break;
+        
+    default:
         $task->printHelpDeleteUser();
-    }
-    exit;
+        break;
+        
 }
-
-$task->printHelpDeleteUser();
 
 
 ?>
