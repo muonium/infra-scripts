@@ -70,16 +70,6 @@ class cron {
         
 		return true;
 	}
-
-    function listTenMostRecentLoggedInUsers() {
-        // List ten most recent users (sort by date of login)
-        $req = self::$_sql->prepare("SELECT id, login, email FROM users ORDER BY last_connection LIMIT 0, 10");
-        $req->execute();
-        while($row = $req->fetch(PDO::FETCH_ASSOC)) {
-            echo "ID : ".$row['id'].", login : ".$row['login'].", email : ".$row['email'];
-        }
-        
-    }
     
 	function deleteInactiveUsers() {
 		// Run every day
@@ -172,6 +162,25 @@ class cron {
 		$req = self::$_sql->prepare("UPDATE upgrade SET removed = 1 WHERE `end` <= ? AND `end` >= 0 AND removed = 0");
 		$req->execute([$time]);
 	}
+    
+    //LIST LAST USERS
+    function printHelpListLastsUsers() {
+        echo "\n";
+        echo "Usage : php listLastUsers.php <value>\n";
+        echo "<value> : required, number of accounts to show, must be positive.\n";
+    }
+
+    function listTenMostRecentLoggedInUsers($anNumberOfLastUsers) {
+        // List ten most recent users (sort by date of login)
+        $anNumberOfLastUsers = intval($anNumberOfLastUsers);
+        $req = self::$_sql->prepare("SELECT id, login, email FROM users ORDER BY last_connection DESC LIMIT 0, :limit");
+        $req->bindValue(':limit', $anNumberOfLastUsers, PDO::PARAM_INT);
+        $req->execute();
+        while($row = $req->fetch()) {
+            echo "ID : ".$row['id'].", login : ".$row['login'].", email : ".$row['email']."\n";
+        }  
+    }
+    //END LIST LAST USERS
     
     //DELETE USER
     function printHelpDeleteUser() {
