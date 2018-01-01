@@ -4,14 +4,21 @@ require_once("run.php");
 $task = new cron();
 
 if($_SERVER['argc'] != 2) {
-    $task->printHelpListLastsUsers();
+    usage();
     exit;
 }
 if(!is_numeric($_SERVER['argv'][1]) || $_SERVER['argv'][1] < 1) {
-    $task->printHelpListLastsUsers();
+    usage();
     exit;
 }
 echo "\nLast ".$_SERVER['argv'][1].' users :'."\n\n";
-$task->listTenMostRecentLoggedInUsers($_SERVER['argv'][1]);
+$task->listMostRecentLoggedInUsers($_SERVER['argv'][1]);
+
+
+function usage() {
+    echo "\n";
+    echo "Usage : php listLastUsers.php <value>\n";
+    echo "<value> : required, number of accounts to show, must be positive.\n";
+}
 
 ?>

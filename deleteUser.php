@@ -4,7 +4,7 @@ require_once("run.php");
 $task = new cron();
 
 if($_SERVER['argc'] != 3 && $_SERVER['argc'] != 4) {
-    $task->printHelpDeleteUser();
+    usage();
     exit;
 }
 
@@ -13,7 +13,7 @@ $argumentPosition = ($isVerbose) ? 2 : 1;
 $isNumberArgumentValid = (($isVerbose && $_SERVER['argc'] == 4) || (!$isVerbose && $_SERVER['argc'] == 3)) ? true : false;
 
 if(!$isNumberArgumentValid) {
-    $task->printHelpDeleteUser();
+    usage();
     exit;
 }
 
@@ -38,9 +38,16 @@ switch($_SERVER['argv'][$argumentPosition]) {
         break;
         
     default:
-        $task->printHelpDeleteUser();
+        usage();
         break;
         
+}
+function usage() {
+    echo "\n";
+    echo "Usage : php deleteUser.php <verbose> <type of removal> <value>\n";
+    echo "<verbose> : optionnal, can be used with -v or --verbose\n";
+    echo "<type of removal> : required, can be used with -i, -u or -e (--id, --username or --email)\n";
+    echo "<value> : required, value about type of removal (either username, id or email)\n";
 }
 
 

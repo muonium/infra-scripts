@@ -164,14 +164,8 @@ class cron {
 	}
     
     //LIST LAST USERS
-    function printHelpListLastsUsers() {
-        echo "\n";
-        echo "Usage : php listLastUsers.php <value>\n";
-        echo "<value> : required, number of accounts to show, must be positive.\n";
-    }
-
-    function listTenMostRecentLoggedInUsers($anNumberOfLastUsers) {
-        // List ten most recent users (sort by date of login)
+    function listMostRecentLoggedInUsers($anNumberOfLastUsers) {
+        // List X most recent users (sort by date of login)
         $anNumberOfLastUsers = intval($anNumberOfLastUsers);
         $req = self::$_sql->prepare("SELECT id, login, email FROM users ORDER BY last_connection DESC LIMIT 0, :limit");
         $req->bindValue(':limit', $anNumberOfLastUsers, PDO::PARAM_INT);
@@ -183,14 +177,6 @@ class cron {
     //END LIST LAST USERS
     
     //DELETE USER
-    function printHelpDeleteUser() {
-        echo "\n";
-        echo "Usage : php deleteUser.php <verbose> <type of removal> <value>\n";
-        echo "<verbose> : optionnal, can be used with -v or --verbose\n";
-        echo "<type of removal> : required, can be used with -i, -u or -e (--id, --username or --email)\n";
-        echo "<value> : required, value about type of removal (either username, id or email)\n";
-    }
-    
     function getIDbyUsername($anUsername) {
         $theRequest = self::$_sql->prepare('SELECT id FROM users WHERE login = :login');
         $theRequest->bindParam(':login', $anUsername, PDO::PARAM_STR);
