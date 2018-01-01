@@ -235,12 +235,12 @@ class cron {
     function deleteByID($anID, $isVerbose) {
         $infos = self::getInfos($anID);
         if($infos === false) {
-            echo "User not found in database.";
+            echo "User not found in database.\n";
         } else {
             if($isVerbose) {
-                echo 'User (ID : '.$infos["id"].', username : '.$infos["login"].', email : '.$infos["email"].') deleted';
+                echo 'User (ID : '.$infos["id"].', username : '.$infos["login"].', email : '.$infos["email"].") deleted\n";
             } else {
-                echo '1 user deleted.';
+                echo '1 user deleted.\n';
             }
             self::deleteUser($anID);
         }
