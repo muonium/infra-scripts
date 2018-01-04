@@ -190,7 +190,7 @@ class cron {
         $theRequest->bindParam(':email', $anEmail, PDO::PARAM_STR);
         $theRequest->execute();
         $id = $theRequest->fetch();
-        return $id;
+        return $id['id'];
     }
 
     function getMailFromID($anID) {
@@ -240,7 +240,7 @@ class cron {
             if($isVerbose) {
                 echo 'User (ID : '.$infos["id"].', username : '.$infos["login"].', email : '.$infos["email"].") deleted\n";
             } else {
-                echo '1 user deleted.\n';
+                echo "1 user deleted.\n";
             }
             self::deleteUser($anID);
         }
