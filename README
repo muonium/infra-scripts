@@ -1,0 +1,5 @@
+Plug the scripts into core (mui.cloud infrastructure procedure):
+================================================================
+
+1. git clone in core/
+2. rename "infra-scripts" to "cron"
