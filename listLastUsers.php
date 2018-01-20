@@ -1,7 +1,7 @@
 <?php
-require_once("run.php");
+require_once("runListLastUser.php");
 
-$task = new cron();
+$task = new cronListLastUser();
 
 if($_SERVER['argc'] != 2) {
     usage();
