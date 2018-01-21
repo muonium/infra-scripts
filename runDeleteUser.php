@@ -3,9 +3,9 @@ define('ROOT', dirname(__DIR__));
 define('NOVA', dirname(dirname(__DIR__)).'/nova');
 use \config as conf;
 
-require_once("../config/confDB.php");
-require_once("../config/confMail.php");
-require_once("../library/MVC/Mail.php");
+require_once(ROOT."/config/confDB.php");
+require_once(ROOT."/config/confMail.php");
+require_once(ROOT."/library/MVC/Mail.php");
 
 class cronDeleteUser {
     
