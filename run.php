@@ -4,9 +4,9 @@ define('NOVA', dirname(dirname(__DIR__)).'/nova');
 use \config as conf;
 use \library\MVC as l;
 
-require_once("../config/confDB.php");
-require_once("../config/confMail.php");
-require_once("../library/MVC/Mail.php");
+require_once(ROOT."/config/confDB.php");
+require_once(ROOT."/config/confMail.php");
+require_once(ROOT."/library/MVC/Mail.php");
 
 // run.php contains the cron class
 // Scripts are not called here
