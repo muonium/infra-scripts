@@ -15,6 +15,7 @@ function _deploy(){
 
 	function rel(){
 		echo "Back up: admin-panel & crons"
+		rm -rf $rel_path/cron.bckp
 		cp -r $rel_path/core/cron $rel_path/cron.bckp&&
 		echo "Downloading new release..."
 		rm -rf $rel_path/core.new
