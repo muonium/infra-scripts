@@ -37,7 +37,7 @@ function _deploy(){
 	}
 
 	local k=$1
-	case $1 in
+	case k1 in
 		"panel") panel;;
 		"rel") rel;;
 	esac
