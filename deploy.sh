@@ -36,8 +36,7 @@ function _deploy(){
 		rm -rf $rel_path/core/.git
 	}
 
-	local k=$1
-	case k1 in
+	case $1 in
 		"panel") panel;;
 		"rel") rel;;
 	esac
