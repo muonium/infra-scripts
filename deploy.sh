@@ -32,7 +32,7 @@ function _deploy(){
 
 	local k=$1
 	case $1 in
-		"panel") echo "Not available yet.";;
+		"panel") panel;;
 		"rel") rel;;
 	esac
 }
