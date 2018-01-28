@@ -5,8 +5,9 @@ panel_path="panel" #href reference
 
 function _deploy(){
 	function panel(){
-		rm -rf $rel_path/core/cron/panel
-		git clone https://github.com/muonium/admin-panel $rel_path/core/cron/panel
+		git clone https://github.com/muonium/admin-panel $rel_path/core/cron/panel.new
+		rm -rf $rel_path/core/panel && mv $rel_path/core/cron/panel.new \
+		panel
 
 		sed -i "s/href=\"\/panel\"/href=\"\/$panel_path\"/g" \
 		$rel_path/core/cron/panel/deployNewVersion.php
