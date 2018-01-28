@@ -7,7 +7,7 @@ function _deploy(){
 	function panel(){
 		rm -rf $rel_path/core/cron/panel.new
 		git clone https://github.com/muonium/admin-panel $rel_path/core/cron/panel.new
-		rm -rf $rel_path/core/panel && mv $rel_path/core/cron/panel.new \
+		rm -rf $rel_path/core/cron/panel && mv $rel_path/core/cron/panel.new \
 		$rel_path/core/cron/panel
 
 		sed -i "s/href=\"\/panel\"/href=\"\/$panel_path\"/g" \
