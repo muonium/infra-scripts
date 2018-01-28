@@ -27,7 +27,7 @@ function _deploy(){
 		mv $rel_path/core.new $rel_path/core
 		echo "restoring crons & admin-panel"
 		mv $rel_path/cron.bckp $rel_path/core/cron
-		echo "Deleting `.git` ..."
+		echo "Deleting .git ..."
 		rm -rf $rel_path/core/.git
 	}
 
