@@ -12,6 +12,9 @@ function _deploy(){
 
 		sed -i "s/href=\"\/panel\"/href=\"\/$panel_path\"/g" \
 		$rel_path/core/cron/panel/deployNewVersion.php
+
+		sed -i "s/href=\"\/panel\"/href=\"\/$panel_path\"/g" \
+		$rel_path/core/cron/panel/updatePanel.php
 	}
 
 	function rel(){
