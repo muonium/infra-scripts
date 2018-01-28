@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
 rel_path="/var/www/html"
+panel_path="panel" #href reference
 
 function _deploy(){
 	function panel(){
-		echo "do something"
+		rm -rf $rel_path/core/cron/panel
+		git clone https://github.com/muonium/admin-panel $rel_path/core/cron/panel
+
+		sed -i "s/href=\"\/panel\"/href=\"\/$panel_path\"/g" \
+		$rel_path/core/cron/panel/deployNewVersion.php
 	}
 
 	function rel(){
@@ -21,11 +26,13 @@ function _deploy(){
 		mv $rel_path/core.new $rel_path/core
 		echo "restoring crons & admin-panel"
 		mv $rel_path/cron.bckp $rel_path/core/cron
+		echo "Deleting `.git` ..."
+		rm -rf $rel_path/core/.git
 	}
 
 	local k=$1
 	case $1 in
-		"panel") panel;;
+		"panel") echo "Not available yet.";;
 		"rel") rel;;
 	esac
 }
