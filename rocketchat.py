@@ -28,7 +28,7 @@ VERSION = "0.0.1"
 
 CONFIG = {
     "avatar": "https://raw.githubusercontent.com/muonium/artworks/master/logos/vertical/byMuonium/muonium2_b.jpg", #noqa
-    "alias": "Nagios",
+    "alias": "deploy.sh",
     "colors": {
         "OK": "#36a64f",
         "CRITICAL": "#d00000",

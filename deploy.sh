@@ -15,6 +15,8 @@ function _alert() {
 
 function _deploy(){
 	function panel(){
+		echo "Backup protected users config file..."
+		cp $rel_path/core/cron/panel/accountsProtected.json $rel_path/.
 		rm -rf $rel_path/core/cron/panel.new
 		git clone https://github.com/muonium/admin-panel $rel_path/core/cron/panel.new
 		rm -rf $rel_path/core/cron/panel && mv $rel_path/core/cron/panel.new \
@@ -25,11 +27,12 @@ function _deploy(){
 
 		sed -i "s/href=\"\/panel\"/href=\"\/$panel_path\"/g" \
 		$rel_path/core/cron/panel/updatePanel.php
+
+		echo "Restoring protected users config file..."
+		cp $rel_path/accountsProtected.json
 	}
 
 	function rel(){
-		echo "Backup protected users config file..."
-		cp $rel_path/core/cron/panel/accountsProtected.json $rel_path/.
 		echo "Back up: admin-panel & crons"
 		rm -rf $rel_path/cron.bckp
 		cp -r $rel_path/core/cron $rel_path/cron.bckp&&
@@ -46,10 +49,6 @@ function _deploy(){
 		mv $rel_path/cron.bckp $rel_path/core/cron
 		echo "Deleting .git ..."
 		rm -rf $rel_path/core/.git
-		echo "restoring protected accounts..."
-		rm -f $rel_path/core/cron/panel/accountsProtected.json
-		cp $rel_path/accountsProtected.json $rel_path/core/cron/panel/.
-		rm -f $rel_path/accountsProtected.json
 		echo "Finished."
 	}
 
