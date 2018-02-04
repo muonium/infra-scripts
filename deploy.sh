@@ -2,6 +2,16 @@
 
 rel_path="/var/www/html"
 panel_path="panel" #href reference
+alert_token=""
+
+function _alert() {
+	local notifType=$1
+	local serviceState=$2
+	local serviceOutput=$3
+	$rel_path/core/cron/rocketchat.py --url $alert_token \
+	--hostalias $HOSTNAME --notificationtype $notifType \
+	--servicestate $serviceState --serviceoutput "$serviceOutput"
+}
 
 function _deploy(){
 	function panel(){
@@ -18,6 +28,8 @@ function _deploy(){
 	}
 
 	function rel(){
+		echo "Backup protected users config file..."
+		cp $rel_path/core/cron/panel/accountsProtected.json $rel_path/.
 		echo "Back up: admin-panel & crons"
 		rm -rf $rel_path/cron.bckp
 		cp -r $rel_path/core/cron $rel_path/cron.bckp&&
@@ -34,6 +46,11 @@ function _deploy(){
 		mv $rel_path/cron.bckp $rel_path/core/cron
 		echo "Deleting .git ..."
 		rm -rf $rel_path/core/.git
+		echo "restoring protected accounts..."
+		rm -f $rel_path/core/cron/panel/accountsProtected.json
+		cp $rel_path/accountsProtected.json $rel_path/core/cron/panel/.
+		rm -f $rel_path/accountsProtected.json
+		echo "Finished."
 	}
 
 	local k=$1
@@ -45,6 +62,18 @@ function _deploy(){
 
 k=$1
 case $1 in
-	"--panel") _deploy "panel";;
-	"--release") _deploy "rel";;
+	"--panel")
+		echo "$(date) :: panel update" >> $rel_path/log.txt
+		_alert "RECOVERY" "OK" "Deploying new panel release..."
+		_deploy "panel"&&
+		_alert "RECOVERY" "OK" "New panel release deployed."||
+		_alert "RECOVERY" "CRITICAL" "Error while deploying new panel release."
+		;;
+	"--release")
+		echo "$(date) :: release update" >> $rel_path/log.txt
+		_alert "RECOVERY" "OK" "Deploying new core release..."
+		_deploy "rel"&&
+		_alert "RECOVERY" "OK" "New release deployed."||
+		_alert "RECOVERY" "CRITICAL" "Error while deploying new release."
+		;;
 esac
