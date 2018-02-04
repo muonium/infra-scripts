@@ -27,7 +27,7 @@ import json
 VERSION = "0.0.1"
 
 CONFIG = {
-    "avatar": "https://raw.githubusercontent.com/andrefreitas/rocketchat-nagios/master/images/nagios_128.png", #noqa
+    "avatar": "https://raw.githubusercontent.com/muonium/artworks/master/logos/vertical/byMuonium/muonium_V_01.png", #noqa
     "alias": "Nagios",
     "colors": {
         "OK": "#36a64f",
