@@ -29,7 +29,9 @@ function _deploy(){
 		$rel_path/core/cron/panel/updatePanel.php
 
 		echo "Restoring protected users config file..."
-		cp $rel_path/accountsProtected.json
+		cp $rel_path/accountsProtected.json $rel_path/core/cron/panel/accountsProtected.json
+		rm -f $rel_path/accountsProtected.json
+		echo "Finished."
 	}
 
 	function rel(){
