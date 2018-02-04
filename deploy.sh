@@ -53,7 +53,6 @@ function _deploy(){
 		echo "Finished."
 	}
 
-	local k=$1
 	case $1 in
 		"panel") panel;;
 		"rel") rel;;
