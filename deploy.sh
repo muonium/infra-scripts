@@ -22,8 +22,8 @@ function _deploy(){
 		git clone https://github.com/muonium/admin-panel $rel_path/core/cron/panel.new
 
 		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]] && cd $rel_path/core/cron/panel.new &&
-		git checkout $b &>/dev/null &&
-		echo "Checked out branch: $b"
+		git checkout $b &>/dev/null && deployed_branch="$b" &&
+		echo "Checked out branch: $b"||deployed_branch="_default_"
 		rm -rf $rel_path/core/cron/panel && mv $rel_path/core/cron/panel.new \
 		$rel_path/core/cron/panel
 
@@ -48,8 +48,8 @@ function _deploy(){
 		git clone https://github.com/muonium/core $rel_path/core.new
 
 		[[ "$checkout_enabled" == "yes " ]]&&[[ ! -z $b ]]&&
-		cd $rel_path/core.new && git checkout $b &/dev/null &&
-		echo "Checked out branch: $b"
+		cd $rel_path/core.new && git checkout $b &/dev/null && deployed_branch="$b" &&
+		echo "Checked out branch: $b"||deployed_branch="_default_"
 
 		echo "Setting up configuration..."
 		rm -rf $rel_path/core.new/config&&
@@ -76,14 +76,16 @@ case $1 in
 		echo "$(date) :: panel update" >> $rel_path/log.txt
 		_alert "OK" "Deploying new panel release..."
 		_deploy "panel" $2 &&
-		_alert "OK" "New panel release deployed."||
+		_alert "OK" "New panel release deployed.
+		Branch: $deployed_branch"||
 		_alert "CRITICAL" "Error while deploying new panel release."
 		;;
 	"--release")
 		echo "$(date) :: release update" >> $rel_path/log.txt
 		_alert "OK" "Deploying new core release..."
 		_deploy "rel" $2 &&
-		_alert "OK" "New release deployed."||
+		_alert "OK" "New release deployed.
+		Branch: $deployed_branch"||
 		_alert "CRITICAL" "Error while deploying new release."
 		;;
 esac
