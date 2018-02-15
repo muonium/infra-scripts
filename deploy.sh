@@ -6,11 +6,10 @@ alert_token=""
 checkout_enabled="yes"
 
 function _alert() {
-	local notifType=$1
-	local serviceState=$2
-	local serviceOutput=$3
+	local serviceState=$1
+	local serviceOutput=$2
 	$rel_path/core/cron/rocketchat.py --url $alert_token \
-	--hostalias $HOSTNAME --notificationtype $notifType \
+	--hostalias $HOSTNAME --notificationtype "RECOVERY" \
 	--servicestate $serviceState --serviceoutput "$serviceOutput"
 }
 
@@ -48,7 +47,7 @@ function _deploy(){
 		rm -rf $rel_path/core.new
 		git clone https://github.com/muonium/core $rel_path/core.new
 
-		[[ "$checkout_enabled" == "yes "]]&&[[ ! -z $b ]]&&
+		[[ "$checkout_enabled" == "yes " ]]&&[[ ! -z $b ]]&&
 		cd $rel_path/core.new && git checkout $b &/dev/null &&
 		echo "Checked out branch: $b"
 
@@ -75,16 +74,16 @@ k=$1
 case $1 in
 	"--panel")
 		echo "$(date) :: panel update" >> $rel_path/log.txt
-		_alert "RECOVERY" "OK" "Deploying new panel release..."
+		_alert "OK" "Deploying new panel release..."
 		_deploy "panel" $2 &&
-		_alert "RECOVERY" "OK" "New panel release deployed."||
-		_alert "RECOVERY" "CRITICAL" "Error while deploying new panel release."
+		_alert "OK" "New panel release deployed."||
+		_alert "CRITICAL" "Error while deploying new panel release."
 		;;
 	"--release")
 		echo "$(date) :: release update" >> $rel_path/log.txt
-		_alert "RECOVERY" "OK" "Deploying new core release..."
+		_alert "OK" "Deploying new core release..."
 		_deploy "rel" $2 &&
-		_alert "RECOVERY" "OK" "New release deployed."||
-		_alert "RECOVERY" "CRITICAL" "Error while deploying new release."
+		_alert "OK" "New release deployed."||
+		_alert "CRITICAL" "Error while deploying new release."
 		;;
 esac
