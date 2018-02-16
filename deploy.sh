@@ -47,7 +47,7 @@ function _deploy(){
 		rm -rf $rel_path/core.new
 		git clone https://github.com/muonium/core $rel_path/core.new
 
-		[[ "$checkout_enabled" == "yes " ]]&&[[ ! -z $b ]]&&
+		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]]&&
 		cd $rel_path/core.new && git checkout $b &>/dev/null && deployed_branch="$b" &&
 		echo "Checked out branch: $b"||deployed_branch="_default_"
 
