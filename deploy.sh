@@ -13,9 +13,40 @@ function _alert() {
 	--servicestate $serviceState --serviceoutput "$serviceOutput"
 }
 
+function _rollback(){
+	function panel(){
+		echo "Deleting current release..."
+		rm -rf $rel_path/core/cron/panel
+		echo "Restoring backup..."
+		cp -r $rel_path/panel.bckp $rel_path/core/cron/panel
+		echo "Done"
+	}
+
+	function rel(){
+		echo "Deleting current release..."
+		rm -rf $rel_path/core
+		echo "Restoring backup..."
+		cp -r $rel_path/core.bckp $rel_path/core
+		echo "Done"
+	}
+
+	case $1 in
+		"panel") panel;;
+		"rel") rel;;
+	esac
+
+}
+
 function _deploy(){
 	function panel(){
 		local b=$1
+
+		# backup the current panel
+		echo "Doing backup..."
+		rm -rf $rel_path/panel.bckp
+		cp -r $rel_path/core/cron/panel $rel_path/panel.bckp
+		echo "Bakup :: DONE"
+
 		echo "Backup protected users config file..."
 		cp $rel_path/core/cron/panel/accountsProtected.json $rel_path/.
 		rm -rf $rel_path/core/cron/panel.new
@@ -40,6 +71,12 @@ function _deploy(){
 
 	function rel(){
 		local b=$1
+
+		echo "Doing backup..."
+		rm -rf $rel_path/core.bckp
+		cp -r $rel_path/core $rel_path/core.bckp
+		echo "Done"
+
 		echo "Back up: admin-panel & crons"
 		rm -rf $rel_path/cron.bckp
 		cp -r $rel_path/core/cron $rel_path/cron.bckp&&
@@ -80,6 +117,7 @@ case $1 in
 		Branch: $deployed_branch"||
 		_alert "CRITICAL" "Error while deploying new panel release."
 		;;
+
 	"--release")
 		echo "$(date) :: release update" >> $rel_path/log.txt
 		_alert "OK" "Deploying new core release..."
@@ -87,5 +125,19 @@ case $1 in
 		_alert "OK" "New release deployed.
 		Branch: $deployed_branch"||
 		_alert "CRITICAL" "Error while deploying new release."
+		;;
+
+	"--release-backup")
+		echo "$(date) :: release rollback" >> $rel_path/log.txt
+		_alert "OK" "Doing backup [release] ..."
+		_rollback $2
+		_alert "OK" "Done! [release]"
+		;;
+
+	"--panel-backup")
+		echo "$(date) :: panel rollback" >> $rel_path/log.txt
+		_alert "OK" "Doing backup [panel] ..."
+		_rollback $2
+		_alert "OK" "Done! [panel]"
 		;;
 esac
