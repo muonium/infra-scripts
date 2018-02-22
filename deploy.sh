@@ -127,14 +127,14 @@ case $1 in
 		_alert "CRITICAL" "Error while deploying new release."
 		;;
 
-	"--release-backup")
+	"--release-rollback")
 		echo "$(date) :: release rollback" >> $rel_path/log.txt
 		_alert "OK" "Doing backup [release] ..."
 		_rollback $2
 		_alert "OK" "Done! [release]"
 		;;
 
-	"--panel-backup")
+	"--panel-rollback")
 		echo "$(date) :: panel rollback" >> $rel_path/log.txt
 		_alert "OK" "Doing backup [panel] ..."
 		_rollback $2
