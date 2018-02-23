@@ -19,7 +19,7 @@ if(!empty($_POST['payload'])) {
     if($hash === $hashPayload) {
         if(!empty($payload->ref)) {
             if($payload->ref == "refs/heads/master") {
-                echo 'Push on master !';
+                echo 'Push on master!';
                 shell_exec("./deploy.sh --release 2>&1");
             } else {
                 echo 'Error : Push is not on master, abort.';
@@ -28,7 +28,7 @@ if(!empty($_POST['payload'])) {
             echo 'Error : ref not set.';
         }
     } else {
-        echo 'Error : secret key doesn\'t match';
+        echo 'Error : secret key doesn\'t match!';
     }
 } else {
     echo 'Error : payload not set.';
