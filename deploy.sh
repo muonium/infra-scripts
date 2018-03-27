@@ -52,6 +52,9 @@ function _deploy(){
 		rm -rf $rel_path/core/cron/panel.new
 		git clone https://github.com/muonium/admin-panel $rel_path/core/cron/panel.new
 
+		echo "Backup logins file..."
+		cp $rel_path/core/cron/panel/includes/logins $rel_path/.
+
 		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]] && cd $rel_path/core/cron/panel.new &&
 		git checkout $b &>/dev/null && deployed_branch="$b" &&
 		echo "Checked out branch: $b"||deployed_branch="_default_"
@@ -66,6 +69,10 @@ function _deploy(){
 		echo "Restoring protected users config file..."
 		cp $rel_path/accountsProtected.json $rel_path/core/cron/panel/accountsProtected.json
 		rm -f $rel_path/accountsProtected.json
+
+		echo "Restoring logins file..."
+		mv $rel_path/logins $rel_path/core/cron/panel/includes/.
+
 		echo "Finished."
 	}
 
