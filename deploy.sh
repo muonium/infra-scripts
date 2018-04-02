@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-rel_path="/var/www/html"
+rel_path="/var/www/html" # path where is located muonium on the server
 panel_path="panel" #href reference
-alert_token=""
-alerts_enabled="yes"
-checkout_enabled="yes"
+alert_token="" # rocket.chat instance token
+alerts_enabled="yes" # use rocketchat.py provided along with the code, notifications on a rocket.chat instance
+checkout_enabled="yes" # disable or enable alerts
 
 function _alert() {
 
