@@ -3,9 +3,16 @@
 rel_path="/var/www/html"
 panel_path="panel" #href reference
 alert_token=""
+alerts_enabled="yes"
 checkout_enabled="yes"
 
 function _alert() {
+
+	# check if the alerts are or not disabled
+	if [[ ! "$checkout_enabled" == "yes" ]]; then
+		return 0;
+	fi
+
 	local serviceState=$1
 	local serviceOutput=$2
 	$rel_path/core/cron/rocketchat.py --url $alert_token \
