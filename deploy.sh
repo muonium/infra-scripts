@@ -94,6 +94,7 @@ function _deploy(){
 		echo "Back up: admin-panel & crons"
 		rm -rf $rel_path/cron.bckp
 		cp -r $rel_path/core/cron $rel_path/cron.bckp&&
+
 		echo "Downloading new release..."
 		rm -rf $rel_path/core.new
 		git clone https://github.com/muonium/core $rel_path/core.new
@@ -113,6 +114,29 @@ function _deploy(){
 		echo "Deleting .git ..."
 		rm -rf $rel_path/core/.git
 		echo "Finished."
+	}
+
+	function webclient(){
+		local b=$1
+
+		echo "Doing backup..."
+		rm -rf $rel_path/app.bckp
+		cp -r $rel_path/app $rel_path/app.bckp
+		echo "Done."
+
+		echo "Downloading new release..."
+		rm -rf $rel_path/app.new # delete any eventual old new release from older deployements
+		git clone https://github.com/muonium/webclient $rel_path/app.new
+		echo "Done."
+
+		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]]&&
+		cd $rel_path/app.new && git checkout $b &>/dev/null && deployed_branch="$b" &&
+		echo "Checked out branch: $b"||deployed_branch="_default_"
+
+		mv $rel_path/app.new $rel_path/app
+
+		rm -rf $rel_path/app/.git
+
 	}
 
 	case $1 in
