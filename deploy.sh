@@ -5,6 +5,7 @@ panel_path="panel" #href reference
 alert_token="" # rocket.chat instance token
 alerts_enabled="yes" # use rocketchat.py provided along with the code, notifications on a rocket.chat instance
 checkout_enabled="yes" # disable or enable alerts
+api_core="core" # "server" or "core"
 
 function _alert() {
 
@@ -97,7 +98,7 @@ function _deploy(){
 
 		echo "Downloading new release..."
 		rm -rf $rel_path/core.new
-		git clone https://github.com/muonium/core $rel_path/core.new
+		git clone https://github.com/muonium/$api_core $rel_path/core.new
 
 		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]]&&
 		cd $rel_path/core.new && git checkout $b &>/dev/null && deployed_branch="$b" &&
