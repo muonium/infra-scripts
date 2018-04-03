@@ -5,7 +5,7 @@ panel_path="panel" #href reference
 alert_token="" # rocket.chat instance token
 alerts_enabled="yes" # use rocketchat.py provided along with the code, notifications on a rocket.chat instance
 checkout_enabled="yes" # disable or enable alerts
-api_core="core" # "server" or "core"
+api_core="core" # "server" or "core" (core is deprecated)
 
 function _alert() {
 
