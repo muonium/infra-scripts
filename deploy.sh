@@ -87,6 +87,8 @@ function _deploy(){
 	function rel(){
 		local b=$1
 
+		[[ -z "$b" ]]&&b="deploy"
+
 		echo "Doing backup..."
 		rm -rf $rel_path/core.bckp
 		cp -r $rel_path/core $rel_path/core.bckp
