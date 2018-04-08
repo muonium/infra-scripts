@@ -6,6 +6,7 @@ alert_token="" # rocket.chat instance token
 alerts_enabled="yes" # use rocketchat.py provided along with the code, notifications on a rocket.chat instance
 checkout_enabled="yes" # disable or enable alerts
 api_core="core" # "server" or "core" (core is deprecated)
+composer_bin="" # composer executable location (example: /usr/bin/composer)
 
 function _alert() {
 
@@ -105,6 +106,9 @@ function _deploy(){
 		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]]&&
 		cd $rel_path/core.new && git checkout $b &>/dev/null && deployed_branch="$b" &&
 		echo "Checked out branch: $b"||deployed_branch="_default_"
+
+		[[ "$api_core" == "server" ]]&&
+		$composer_bin $rel_path/core/
 
 		echo "Setting up configuration..."
 		rm -rf $rel_path/core.new/config&&
