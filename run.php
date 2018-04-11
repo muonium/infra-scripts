@@ -6,8 +6,10 @@ use \library\MVC as l;
 
 require_once(ROOT."/config/confDB.php");
 require_once(ROOT."/config/confMail.php");
+require_once(ROOT."/config/confRedis.php");
 require_once(ROOT."/library/MVC/Mail.php");
-require_once(ROOT."/vendor/predis/predis/autoload.php");
+
+require_once(ROOT."/vendor/autoload.php");
 
 // run.php contains the cron class
 // Scripts are not called here
@@ -25,13 +27,12 @@ class cron {
 
 	// Redis
 	private $redis;
-	private $addr = 'tcp://127.0.0.1:6379';
 	private $exp = 1200;
 
 	function __construct() {
 		self::$_sql = new \PDO('mysql:host='.conf\confDB::host.';dbname='.conf\confDB::db,conf\confDB::user,conf\confDB::password);
 		$this->_mail = new l\Mail();
-		$this->redis = new \Predis\Client($this->addr);
+		$this->redis = new \Predis\Client(conf\confRedis::parameters, conf\confRedis::options);
 	}
 
 	public function deleteInactiveUsers() {
