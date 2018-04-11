@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
-rel_path="/var/www/html"
+rel_path="/var/www/html" # path where is located muonium on the server
 panel_path="panel" #href reference
-alert_token=""
-checkout_enabled="yes"
+alert_token="" # rocket.chat instance token
+alerts_enabled="yes" # use rocketchat.py provided along with the code, notifications on a rocket.chat instance
+checkout_enabled="yes" # disable or enable alerts
+api_core="core" # "server" or "core" (core is deprecated)
+composer_bin="" # composer executable location (example: /usr/bin/composer)
 
 function _alert() {
+
+	# check if the alerts are or not disabled
+	if [[ ! "$checkout_enabled" == "yes" ]]; then
+		return 0;
+	fi
+
 	local serviceState=$1
 	local serviceOutput=$2
 	$rel_path/core/cron/rocketchat.py --url $alert_token \
@@ -52,6 +61,9 @@ function _deploy(){
 		rm -rf $rel_path/core/cron/panel.new
 		git clone https://github.com/muonium/admin-panel $rel_path/core/cron/panel.new
 
+		echo "Backup logins file..."
+		cp $rel_path/core/cron/panel/includes/logins $rel_path/.
+
 		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]] && cd $rel_path/core/cron/panel.new &&
 		git checkout $b &>/dev/null && deployed_branch="$b" &&
 		echo "Checked out branch: $b"||deployed_branch="_default_"
@@ -66,11 +78,17 @@ function _deploy(){
 		echo "Restoring protected users config file..."
 		cp $rel_path/accountsProtected.json $rel_path/core/cron/panel/accountsProtected.json
 		rm -f $rel_path/accountsProtected.json
+
+		echo "Restoring logins file..."
+		mv $rel_path/logins $rel_path/core/cron/panel/includes/.
+
 		echo "Finished."
 	}
 
 	function rel(){
 		local b=$1
+
+		[[ -z "$b" ]]&&b="deploy"
 
 		echo "Doing backup..."
 		rm -rf $rel_path/core.bckp
@@ -80,13 +98,17 @@ function _deploy(){
 		echo "Back up: admin-panel & crons"
 		rm -rf $rel_path/cron.bckp
 		cp -r $rel_path/core/cron $rel_path/cron.bckp&&
+
 		echo "Downloading new release..."
 		rm -rf $rel_path/core.new
-		git clone https://github.com/muonium/core $rel_path/core.new
+		git clone https://github.com/muonium/$api_core $rel_path/core.new
 
 		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]]&&
 		cd $rel_path/core.new && git checkout $b &>/dev/null && deployed_branch="$b" &&
 		echo "Checked out branch: $b"||deployed_branch="_default_"
+
+		[[ "$api_core" == "server" ]]&&
+		$composer_bin $rel_path/core/
 
 		echo "Setting up configuration..."
 		rm -rf $rel_path/core.new/config&&
@@ -99,6 +121,29 @@ function _deploy(){
 		echo "Deleting .git ..."
 		rm -rf $rel_path/core/.git
 		echo "Finished."
+	}
+
+	function webclient(){
+		local b=$1
+
+		echo "Doing backup..."
+		rm -rf $rel_path/app.bckp
+		cp -r $rel_path/app $rel_path/app.bckp
+		echo "Done."
+
+		echo "Downloading new release..."
+		rm -rf $rel_path/app.new # delete any eventual old new release from older deployements
+		git clone https://github.com/muonium/webclient $rel_path/app.new
+		echo "Done."
+
+		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]]&&
+		cd $rel_path/app.new && git checkout $b &>/dev/null && deployed_branch="$b" &&
+		echo "Checked out branch: $b"||deployed_branch="_default_"
+
+		mv $rel_path/app.new $rel_path/app
+
+		rm -rf $rel_path/app/.git
+
 	}
 
 	case $1 in
