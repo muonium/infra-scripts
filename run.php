@@ -137,7 +137,7 @@ class cron {
 			$iat = $this->redis->get($key);
 			if($iat < $max_iat) { // Expired
 				$s = substr($key, 0, -4);
-				$jti = substr($s, 6, -1);
+				$jti = substr($s, 6);
 				$uid = $this->redis->get($s.':uid');
 
 				$k = $this->redis->keys($s.'*'); // Remove token
