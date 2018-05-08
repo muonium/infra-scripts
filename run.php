@@ -1,15 +1,17 @@
 <?php
 define('ROOT', dirname(__DIR__));
 define('NOVA', dirname(dirname(__DIR__)).'/nova');
+define('DEFAULT_LANGUAGE', 'en');
+define('DIR_LANGUAGE', ROOT.'/public/translations/');
 use \config as conf;
 use \library\MVC as l;
 
 require_once(ROOT."/config/confDB.php");
 require_once(ROOT."/config/confMail.php");
-require_once(ROOT."/config/confRedis.php");
+//require_once(ROOT."/config/confRedis.php");
 require_once(ROOT."/library/MVC/Mail.php");
 
-require_once(ROOT."/vendor/autoload.php");
+//require_once(ROOT."/vendor/autoload.php");
 
 // run.php contains the cron class
 // Scripts are not called here
@@ -17,6 +19,7 @@ require_once(ROOT."/vendor/autoload.php");
 
 class cron {
 	protected static $_sql;
+    protected static $txt = null;
 	private $_mail;
 
 	// Delete inactive users after x days
@@ -25,6 +28,10 @@ class cron {
 	// Send a mail to an inactive user after x days
 	private $_inactiveUserMailDelay = 150;
 
+    // Send a mail to an user x days before his subscription ends
+	private $_subscriptionEndMailDelay = 7;
+	private static $userLanguage;
+    
 	// Redis
 	private $redis;
 	private $exp = 1200;
@@ -35,6 +42,44 @@ class cron {
 		$this->redis = new \Predis\Client(conf\confRedis::parameters, conf\confRedis::options);
 	}
 
+    function remindSubscriptionsDaysLeft() {
+        //Run everyday
+        
+        $req = self::$_sql->prepare("SELECT UP.id_user, US.login, UP.end, US.email, US.language FROM upgrade UP INNER JOIN users US ON (UP.id_user = US.id) WHERE UP.removed = 0 AND UP.end < ? AND UP.end <> -1");
+		$req->execute([time() + $this->_subscriptionEndMailDelay * 86400]);
+        while($row = $req->fetch(PDO::FETCH_ASSOC)) {
+            $daysLeft = ceil(($row['end'] - time())/86400);
+            $lang = ($row['language'] === NULL) ? DEFAULT_LANGUAGE : $row['language'];
+            self::loadLanguage($lang);
+            $this->_mail->_subject = str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->subject);
+			$this->_mail->_to = $row['email'];
+            $this->_mail->_message = str_replace("[login]", $row['login'], str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->message));
+            $this->_mail->send();
+        }
+    }
+    
+    public static function loadLanguage($lang) {
+		if(file_exists(DIR_LANGUAGE.$lang.".json")) {
+            $_json = file_get_contents(DIR_LANGUAGE.$lang.".json");
+			self::$userLanguage = $lang;
+		} elseif($lang === DIR_LANGUAGE) {
+			exit('Unable to load DEFAULT_LANGUAGE JSON !');
+		} else {
+            $_json = file_get_contents(DIR_LANGUAGE.DEFAULT_LANGUAGE.".json");
+			self::$userLanguage = DEFAULT_LANGUAGE;
+			self::loadLanguage(DEFAULT_LANGUAGE);
+		}
+
+		self::$txt = json_decode($_json);
+		if(json_last_error() !== 0) {
+			if($lang === DEFAULT_LANGUAGE) {
+				exit('Error in the DEFAULT_LANGUAGE JSON !');
+			}
+			self::loadLanguage(DEFAULT_LANGUAGE);
+		}
+		return true;
+	}
+    
 	public function deleteInactiveUsers() {
 		// Run every day
 		// Query for selecting inactive users to delete
