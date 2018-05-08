@@ -8,10 +8,10 @@ use \library\MVC as l;
 
 require_once(ROOT."/config/confDB.php");
 require_once(ROOT."/config/confMail.php");
-//require_once(ROOT."/config/confRedis.php");
+require_once(ROOT."/config/confRedis.php");
 require_once(ROOT."/library/MVC/Mail.php");
 
-//require_once(ROOT."/vendor/autoload.php");
+require_once(ROOT."/vendor/autoload.php");
 
 // run.php contains the cron class
 // Scripts are not called here
