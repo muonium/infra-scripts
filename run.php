@@ -49,12 +49,14 @@ class cron {
 		$req->execute([time() + $this->_subscriptionEndMailDelay * 86400]);
         while($row = $req->fetch(PDO::FETCH_ASSOC)) {
             $daysLeft = ceil(($row['end'] - time())/86400);
-            $lang = ($row['language'] === NULL) ? DEFAULT_LANGUAGE : $row['language'];
-            self::loadLanguage($lang);
-            $this->_mail->_subject = str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->subject);
-			$this->_mail->_to = $row['email'];
-            $this->_mail->_message = str_replace("[login]", $row['login'], str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->message));
-            $this->_mail->send();
+            if($daysLeft == 1 || $daysLeft == 3 || $daysLeft == 7) {
+                $lang = ($row['language'] === NULL) ? DEFAULT_LANGUAGE : $row['language'];
+                self::loadLanguage($lang);
+                $this->_mail->_subject = str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->subject);
+                $this->_mail->_to = $row['email'];
+                $this->_mail->_message = str_replace("[login]", $row['login'], str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->message));
+                $this->_mail->send(); 
+            }
         }
     }
     
