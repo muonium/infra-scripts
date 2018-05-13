@@ -45,7 +45,7 @@ class cron {
     function remindSubscriptionsDaysLeft() {
         //Run everyday
         
-        $req = self::$_sql->prepare("SELECT UP.id_user, US.login, UP.end, US.email, US.language FROM upgrade UP INNER JOIN users US ON (UP.id_user = US.id) WHERE UP.removed = 0 AND UP.end < ? AND UP.end <> -1");
+        $req = self::$_sql->prepare("SELECT UP.id_user, US.login, UP.end, US.email, US.lang FROM upgrade UP INNER JOIN users US ON (UP.id_user = US.id) WHERE UP.removed = 0 AND UP.end < ? AND UP.end <> -1");
 		$req->execute([time() + $this->_subscriptionEndMailDelay * 86400]);
         while($row = $req->fetch(PDO::FETCH_ASSOC)) {
             $daysLeft = ceil(($row['end'] - time())/86400);
