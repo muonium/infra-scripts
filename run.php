@@ -41,24 +41,6 @@ class cron {
 		$this->_mail = new l\Mail();
 		$this->redis = new \Predis\Client(conf\confRedis::parameters, conf\confRedis::options);
 	}
-
-    function remindSubscriptionsDaysLeft() {
-        //Run everyday
-        
-        $req = self::$_sql->prepare("SELECT UP.id_user, US.login, UP.end, US.email, US.lang FROM upgrade UP INNER JOIN users US ON (UP.id_user = US.id) WHERE UP.removed = 0 AND UP.end < ? AND UP.end <> -1");
-		$req->execute([time() + $this->_subscriptionEndMailDelay * 86400]);
-        while($row = $req->fetch(PDO::FETCH_ASSOC)) {
-            $daysLeft = ceil(($row['end'] - time())/86400);
-            if($daysLeft == 1 || $daysLeft == 3 || $daysLeft == 7) {
-                $lang = ($row['language'] === NULL) ? DEFAULT_LANGUAGE : $row['language'];
-                self::loadLanguage($lang);
-                $this->_mail->_subject = str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->subject);
-                $this->_mail->_to = $row['email'];
-                $this->_mail->_message = str_replace("[login]", $row['login'], str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->message));
-                $this->_mail->send(); 
-            }
-        }
-    }
     
     public static function loadLanguage($lang) {
 		if(file_exists(DIR_LANGUAGE.$lang.".json")) {
@@ -82,6 +64,24 @@ class cron {
 		return true;
 	}
     
+    function remindSubscriptionsDaysLeft() {
+        //Run everyday
+        
+        $req = self::$_sql->prepare("SELECT UP.id_user, US.login, UP.end, US.email, US.lang FROM upgrade UP INNER JOIN users US ON (UP.id_user = US.id) WHERE UP.removed = 0 AND UP.end < ? AND UP.end <> -1");
+		$req->execute([time() + $this->_subscriptionEndMailDelay * 86400]);
+        while($row = $req->fetch(PDO::FETCH_ASSOC)) {
+            $daysLeft = ceil(($row['end'] - time())/86400);
+            if($daysLeft == 1 || $daysLeft == 3 || $daysLeft == 7) {
+                $lang = ($row['lang'] === NULL) ? DEFAULT_LANGUAGE : $row['lang'];
+                self::loadLanguage($lang);
+                $this->_mail->_subject = str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->subject);
+                $this->_mail->_to = $row['email'];
+                $this->_mail->_message = str_replace("[login]", $row['login'], str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->message));
+                $this->_mail->send(); 
+            }
+        }
+    }
+    
 	public function deleteInactiveUsers() {
 		// Run every day
 		// Query for selecting inactive users to delete
@@ -97,27 +97,30 @@ class cron {
 		shell_exec("bash notifier.sh inactive_users --force");
 
 		// Query for selecting inactive users to send a mail
-		$req = self::$_sql->prepare("SELECT login, email FROM users WHERE last_connection >= ? AND last_connection <= ?");
-
+		$req = self::$_sql->prepare("SELECT login, email, lang FROM users WHERE last_connection >= ? AND last_connection <= ?");
 		// Select timestamp of the day x days ago today at 00:00:00 and 23:59:59
 		$mailDayFirst = strtotime('today midnight', strtotime('-'.$this->_inactiveUserMailDelay.' days'));
 		$mailDayLast = strtotime('tomorrow midnight', $mailDayFirst) - 1;
-
+        
 		// The mail will be sent once time, when the user reaches x days of inactivity
 		$req->execute([$mailDayFirst, $mailDayLast]);
 
-		// Subject of the mail
-		$this->_mail->_subject = "Muonium - You are inactive";
-
-		$i = 0;
 		while($row = $req->fetch(PDO::FETCH_ASSOC)) {
+            $lang = ($row['lang'] === NULL) ? DEFAULT_LANGUAGE : $row['lang'];
+            self::loadLanguage($lang);
+
+            // Subject of the mail
+            $this->_mail->_subject = self::$txt->InactiveUserMail->subject;
+            
 			$this->_mail->_to = $row['email'];
-			$this->_mail->_message = "Hi ".$row['login'].",<br>This email is sent because you are inactive for
-				".$this->_inactiveUserMailDelay." days.<br>Your account will be deleted in
-				".($this->_inactiveUserDeleteDelay - $this->_inactiveUserMailDelay)." days if you don't log in<br>
-				Muonium Team
-			";
-			if($this->_mail->send()) $i++;
+            
+            $originalMail = self::$txt->InactiveUserMail->message;
+            $mailWithLogin = str_replace("[login]", $row['login'], $originalMail);
+            $mailWithInactiveDays = str_replace("[inactiveDays]", $this->_inactiveUserMailDelay, $mailWithLogin);
+            $mailWithDeleteDelay = str_replace("[deleteDelay]", ($this->_inactiveUserDeleteDelay - $this->_inactiveUserMailDelay), $mailWithInactiveDays);
+
+            $this->_mail->_message = $mailWithDeleteDelay;
+            $this->_mail->send();
 		}
 	}
 
