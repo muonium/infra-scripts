@@ -15,7 +15,7 @@ require_once(ROOT."/vendor/autoload.php");
 
 class cron {
 	protected static $_sql;
-    
+
 	// Redis
 	private $redis;
 	private $exp = 1200;
@@ -97,6 +97,7 @@ class cron {
 				}
 
 				if($uid !== null) {
+                    $this->redis->del('uid:'.$uid.':ga');
 					if($uidTokens = $this->redis->get('uid:'.$uid)) { // Remove token from user tokens list
 						$uidTokens = str_replace($jti.';', '', $uidTokens);
 						if(strlen($uidTokens) > 0) {
