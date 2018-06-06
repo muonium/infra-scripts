@@ -138,6 +138,10 @@ function _deploy(){
 	function webclient(){
 		local b=$1
 
+		if [[ ! -d "$rel_path/app" ]]; then
+			git clone https://github.com/muonium/webclient-build $rel_path/app
+		fi
+
 		echo "Doing backup..."
 		rm -rf $rel_path/app.bckp
 		cp -r $rel_path/app $rel_path/app.bckp
