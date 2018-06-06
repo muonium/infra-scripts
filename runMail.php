@@ -15,7 +15,7 @@ use \library\MVC as l;
 
 class cronMail {
 	protected static $_sql;
-    protected static $txt = null;
+    protected static $txt = []; // Array of languages objects
 	private $_mail;
 
 	// Delete inactive users after x days
@@ -26,53 +26,51 @@ class cronMail {
 
     // Send a mail to an user x days before his subscription ends
 	private $_subscriptionEndMailDelay = 7;
-	private static $userLanguage;
 
 	function __construct() {
 		self::$_sql = new \PDO('mysql:host='.conf\confDB::host.';dbname='.conf\confDB::db,conf\confDB::user,conf\confDB::password);
 		$this->_mail = new l\Mail();
 	}
-    
+
     public static function loadLanguage($lang) {
-		if(file_exists(DIR_LANGUAGE.$lang.".json")) {
+        if(isset(self::$txt[$lang])) { // Language already loaded
+            return $lang;
+        } elseif(file_exists(DIR_LANGUAGE.$lang.".json")) {  // Load language if file exists
             $_json = file_get_contents(DIR_LANGUAGE.$lang.".json");
-			self::$userLanguage = $lang;
-		} elseif($lang === DIR_LANGUAGE) {
+		} elseif($lang === DEFAULT_LANGUAGE) {
 			exit('Unable to load DEFAULT_LANGUAGE JSON !');
-		} else {
-            $_json = file_get_contents(DIR_LANGUAGE.DEFAULT_LANGUAGE.".json");
-			self::$userLanguage = DEFAULT_LANGUAGE;
+		} else { // Load default language
 			self::loadLanguage(DEFAULT_LANGUAGE);
 		}
 
-		self::$txt = json_decode($_json);
+		$decoded = json_decode($_json);
 		if(json_last_error() !== 0) {
 			if($lang === DEFAULT_LANGUAGE) {
 				exit('Error in the DEFAULT_LANGUAGE JSON !');
 			}
 			self::loadLanguage(DEFAULT_LANGUAGE);
 		}
-		return true;
+        self::$txt[$lang] = $decoded;
+		return $lang;
 	}
-    
+
     function remindSubscriptionsDaysLeft() {
-        //Run everyday
-        
+        // Run everyday
         $req = self::$_sql->prepare("SELECT UP.id_user, US.login, UP.end, US.email, US.lang FROM upgrade UP INNER JOIN users US ON (UP.id_user = US.id) WHERE UP.removed = 0 AND UP.end < ? AND UP.end <> -1");
 		$req->execute([time() + $this->_subscriptionEndMailDelay * 86400]);
         while($row = $req->fetch(PDO::FETCH_ASSOC)) {
             $daysLeft = ceil(($row['end'] - time())/86400);
             if($daysLeft == 1 || $daysLeft == 3 || $daysLeft == 7) {
-                $lang = ($row['lang'] === NULL) ? DEFAULT_LANGUAGE : $row['lang'];
-                self::loadLanguage($lang);
-                $this->_mail->_subject = str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->subject);
+                $lang = ($row['lang'] === null || $row['lang'] == '') ? DEFAULT_LANGUAGE : $row['lang'];
+                $lang = self::loadLanguage($lang);
+                $this->_mail->_subject = str_replace("[days]", $daysLeft, self::$txt[$lang]->EndSubscriptionMail->subject);
                 $this->_mail->_to = $row['email'];
-                $this->_mail->_message = str_replace("[login]", $row['login'], str_replace("[days]", $daysLeft, self::$txt->EndSubscriptionMail->message));
-                $this->_mail->send(); 
+                $this->_mail->_message = str_replace("[login]", $row['login'], str_replace("[days]", $daysLeft, self::$txt[$lang]->EndSubscriptionMail->message));
+                $this->_mail->send();
             }
         }
     }
-    
+
 	public function deleteInactiveUsers() {
 		// Run every day
 		// Query for selecting inactive users to delete
@@ -92,20 +90,20 @@ class cronMail {
 		// Select timestamp of the day x days ago today at 00:00:00 and 23:59:59
 		$mailDayFirst = strtotime('today midnight', strtotime('-'.$this->_inactiveUserMailDelay.' days'));
 		$mailDayLast = strtotime('tomorrow midnight', $mailDayFirst) - 1;
-        
+
 		// The mail will be sent once time, when the user reaches x days of inactivity
 		$req->execute([$mailDayFirst, $mailDayLast]);
 
 		while($row = $req->fetch(PDO::FETCH_ASSOC)) {
-            $lang = ($row['lang'] === NULL) ? DEFAULT_LANGUAGE : $row['lang'];
-            self::loadLanguage($lang);
+            $lang = ($row['lang'] === null || $row['lang'] == '') ? DEFAULT_LANGUAGE : $row['lang'];
+            $lang = self::loadLanguage($lang);
 
             // Subject of the mail
-            $this->_mail->_subject = self::$txt->InactiveUserMail->subject;
-            
+            $this->_mail->_subject = self::$txt[$lang]->InactiveUserMail->subject;
+
 			$this->_mail->_to = $row['email'];
-            
-            $originalMail = self::$txt->InactiveUserMail->message;
+
+            $originalMail = self::$txt[$lang]->InactiveUserMail->message;
             $mailWithLogin = str_replace("[login]", $row['login'], $originalMail);
             $mailWithInactiveDays = str_replace("[inactiveDays]", $this->_inactiveUserMailDelay, $mailWithLogin);
             $mailWithDeleteDelay = str_replace("[deleteDelay]", ($this->_inactiveUserDeleteDelay - $this->_inactiveUserMailDelay), $mailWithInactiveDays);

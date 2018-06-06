@@ -106,19 +106,20 @@ class cron {
 							$this->redis->del('uid:'.$uid);
 						}
 					}
-
-					$k = $this->redis->keys('uid:'.$uid.':mailnbf*'); // Remove mailnbf if expired
-					foreach($k as $v) {
-						$nbf = $this->redis->get($v);
-						if(is_numeric($nbf) && $nbf <= time()) {
-							$this->redis->del($v);
-						}
-					}
 				}
 			}
 		}
 		// Remove data about shared files (it contains only paths in order to improve performances)
 		$keys = $this->redis->keys('shared:*');
+		foreach($keys as $key) {
+			$this->redis->del($key);
+		}
+        // Remove mailnbf and ga
+        $keys = $this->redis->keys('uid:*:mailnbf*');
+		foreach($keys as $key) {
+			$this->redis->del($key);
+		}
+        $keys = $this->redis->keys('uid:*:ga');
 		foreach($keys as $key) {
 			$this->redis->del($key);
 		}
