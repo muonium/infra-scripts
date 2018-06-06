@@ -1,6 +1,6 @@
 <?php
-define('ROOT', dirname(__DIR__));
-define('NOVA', dirname(dirname(__DIR__)).'/nova');
+if(!defined('ROOT')) define('ROOT', dirname(__DIR__));
+if(!defined('NOVA')) define('NOVA', dirname(dirname(__DIR__)).'/nova');
 use \config as conf;
 
 require_once(ROOT."/config/confDB.php");
@@ -8,7 +8,7 @@ require_once(ROOT."/config/confMail.php");
 require_once(ROOT."/library/MVC/Mail.php");
 
 class cronDeleteUser {
-    
+
     protected static $_sql;
 
     function __construct() {
@@ -42,6 +42,8 @@ class cronDeleteUser {
         $req = self::$_sql->prepare("DELETE FROM user_lostpass WHERE id_user = ?");
         $req->execute([$id_user]);
         $req = self::$_sql->prepare("DELETE FROM user_validation WHERE id_user = ?");
+        $req->execute([$id_user]);
+        $req = self::$_sql->prepare("DELETE FROM user_codes WHERE id_user = ?");
         $req->execute([$id_user]);
         $req = self::$_sql->prepare("DELETE FROM ban WHERE id_user = ?");
         $req->execute([$id_user]);

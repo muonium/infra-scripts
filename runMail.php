@@ -74,12 +74,13 @@ class cronMail {
 	public function deleteInactiveUsers() {
 		// Run every day
 		// Query for selecting inactive users to delete
+        $cronDeleteUser = new \cronDeleteUser();
 		$req = self::$_sql->prepare("SELECT id FROM users WHERE last_connection < ?");
 		$req->execute([time() - $this->_inactiveUserDeleteDelay*86400]);
 
 		$i = 0;
 		while($row = $req->fetch(PDO::FETCH_ASSOC)) {
-			if($this->deleteUser(intval($row['id']))) $i++;
+			if($cronDeleteUser->deleteUser(intval($row['id']))) $i++;
 		}
 
 		// Call the notifier to log the event.

@@ -1,6 +1,6 @@
 <?php
-define('ROOT', dirname(__DIR__));
-define('NOVA', dirname(dirname(__DIR__)).'/nova');
+if(!defined('ROOT')) define('ROOT', dirname(__DIR__));
+if(!defined('NOVA')) define('NOVA', dirname(dirname(__DIR__)).'/nova');
 
 use \config as conf;
 
