@@ -5,7 +5,6 @@ panel_path="panel" #href reference
 alert_token="" # rocket.chat instance token
 alerts_enabled="yes" # use rocketchat.py provided along with the code, notifications on a rocket.chat instance
 checkout_enabled="yes" # disable or enable alerts
-api_core="core" # "server" or "core" (core is deprecated)
 composer_bin="" # composer executable location (example: /usr/bin/composer)
 
 function _alert() {
@@ -88,39 +87,52 @@ function _deploy(){
 	function rel(){
 		local b=$1
 
-		[[ -z "$b" ]]&&b="deploy"
+		if [[ ! -d "$rel_path/core" ]]; then
+			echo "Downloading release from Git..."
+			git clone https://github.com/muonium/server $rel_path/core
+
+			echo "Applying configuration files"
+			rm -rf $rel_path/core/config
+			cp -r $rel_path/template/config $rel_path/core/.
+
+			echo "Composer install"
+			cd $rel_path/core && $composer_bin install
+
+			echo "Installing translations files"
+			mkdir -p $rel_path/core/public
+			cd $rel_path/core/public
+			git clone https://github.com/muonium/translations t
+			mv t/webclient translations
+			rm -rf t
+
+			echo "Done"
+			return 0;
+		fi
+
+		[[ -z "$b" ]]&&b="master" #if no branch got provided, use master as default
 
 		echo "Doing backup..."
 		rm -rf $rel_path/core.bckp
 		cp -r $rel_path/core $rel_path/core.bckp
 		echo "Done"
 
-		echo "Back up: admin-panel & crons"
-		rm -rf $rel_path/cron.bckp
-		cp -r $rel_path/core/cron $rel_path/cron.bckp&&
-
-		echo "Downloading new release..."
-		rm -rf $rel_path/core.new
-		git clone https://github.com/muonium/$api_core $rel_path/core.new
+		echo "Pulling new release..."
+		cd $rel_path/core && git pull
 
 		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]]&&
-		cd $rel_path/core.new && git checkout $b &>/dev/null && deployed_branch="$b" &&
-		echo "Checked out branch: $b"||deployed_branch="_default_"
+		cd $rel_path/core && git checkout $b &>/dev/null && deployed_branch="$b" &&
+		echo "Checked out branch: $b"&&git pull||deployed_branch="_default_"
 
-		[[ "$api_core" == "server" ]]&&
-		$composer_bin $rel_path/core/
+		echo "Composer install..."
+		cd $rel_path/core && $composer_bin install
 
-		echo "Setting up configuration..."
-		rm -rf $rel_path/core.new/config&&
-		cp -r $rel_path/template/config $rel_path/core.new/.&&
-		echo "Deploying new release now..."
-		rm -rf $rel_path/core
-		mv $rel_path/core.new $rel_path/core
-		echo "restoring crons & admin-panel"
-		mv $rel_path/cron.bckp $rel_path/core/cron
-		echo "Deleting .git ..."
-		rm -rf $rel_path/core/.git
-		echo "Finished."
+		echo "Installing translations"
+		cd $rel_path/core/public
+		git clone https://github.com/muonium/translations t
+		rm -rf translations && mv t/webclient translations
+		rm -rf t
+
+		echo "Done"
 	}
 
 	function webclient(){
@@ -131,18 +143,12 @@ function _deploy(){
 		cp -r $rel_path/app $rel_path/app.bckp
 		echo "Done."
 
-		echo "Downloading new release..."
-		rm -rf $rel_path/app.new # delete any eventual old new release from older deployements
-		git clone https://github.com/muonium/webclient $rel_path/app.new
-		echo "Done."
+		echo "Pulling new release..."
+		cd $rel_path/app && git pull
 
 		[[ "$checkout_enabled" == "yes" ]]&&[[ ! -z $b ]]&&
-		cd $rel_path/app.new && git checkout $b &>/dev/null && deployed_branch="$b" &&
-		echo "Checked out branch: $b"||deployed_branch="_default_"
-
-		mv $rel_path/app.new $rel_path/app
-
-		rm -rf $rel_path/app/.git
+		cd $rel_path/app && git checkout $b &>/dev/null && deployed_branch="$b" &&
+		echo "Checked out branch: $b"&&git pull||deployed_branch="_default_"
 
 	}
 
