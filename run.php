@@ -1,13 +1,11 @@
 <?php
-define('ROOT', dirname(__DIR__));
-define('NOVA', dirname(dirname(__DIR__)).'/nova');
+if(!defined('ROOT')) define('ROOT', dirname(__DIR__));
+if(!defined('NOVA')) define('NOVA', dirname(dirname(__DIR__)).'/nova');
+
 use \config as conf;
-use \library\MVC as l;
 
 require_once(ROOT."/config/confDB.php");
-require_once(ROOT."/config/confMail.php");
 require_once(ROOT."/config/confRedis.php");
-require_once(ROOT."/library/MVC/Mail.php");
 
 require_once(ROOT."/vendor/autoload.php");
 
@@ -17,13 +15,6 @@ require_once(ROOT."/vendor/autoload.php");
 
 class cron {
 	protected static $_sql;
-	private $_mail;
-
-	// Delete inactive users after x days
-	private $_inactiveUserDeleteDelay = 180;
-
-	// Send a mail to an inactive user after x days
-	private $_inactiveUserMailDelay = 150;
 
 	// Redis
 	private $redis;
@@ -31,47 +22,7 @@ class cron {
 
 	function __construct() {
 		self::$_sql = new \PDO('mysql:host='.conf\confDB::host.';dbname='.conf\confDB::db,conf\confDB::user,conf\confDB::password);
-		$this->_mail = new l\Mail();
 		$this->redis = new \Predis\Client(conf\confRedis::parameters, conf\confRedis::options);
-	}
-
-	public function deleteInactiveUsers() {
-		// Run every day
-		// Query for selecting inactive users to delete
-		$req = self::$_sql->prepare("SELECT id FROM users WHERE last_connection < ?");
-		$req->execute([time() - $this->_inactiveUserDeleteDelay*86400]);
-
-		$i = 0;
-		while($row = $req->fetch(PDO::FETCH_ASSOC)) {
-			if($this->deleteUser(intval($row['id']))) $i++;
-		}
-
-		// Call the notifier to log the event.
-		shell_exec("bash notifier.sh inactive_users --force");
-
-		// Query for selecting inactive users to send a mail
-		$req = self::$_sql->prepare("SELECT login, email FROM users WHERE last_connection >= ? AND last_connection <= ?");
-
-		// Select timestamp of the day x days ago today at 00:00:00 and 23:59:59
-		$mailDayFirst = strtotime('today midnight', strtotime('-'.$this->_inactiveUserMailDelay.' days'));
-		$mailDayLast = strtotime('tomorrow midnight', $mailDayFirst) - 1;
-
-		// The mail will be sent once time, when the user reaches x days of inactivity
-		$req->execute([$mailDayFirst, $mailDayLast]);
-
-		// Subject of the mail
-		$this->_mail->_subject = "Muonium - You are inactive";
-
-		$i = 0;
-		while($row = $req->fetch(PDO::FETCH_ASSOC)) {
-			$this->_mail->_to = $row['email'];
-			$this->_mail->_message = "Hi ".$row['login'].",<br>This email is sent because you are inactive for
-				".$this->_inactiveUserMailDelay." days.<br>Your account will be deleted in
-				".($this->_inactiveUserDeleteDelay - $this->_inactiveUserMailDelay)." days if you don't log in<br>
-				Muonium Team
-			";
-			if($this->_mail->send()) $i++;
-		}
 	}
 
 	private function getFullPath($folder_id, $user_id) {
@@ -146,6 +97,7 @@ class cron {
 				}
 
 				if($uid !== null) {
+                    $this->redis->del('uid:'.$uid.':ga');
 					if($uidTokens = $this->redis->get('uid:'.$uid)) { // Remove token from user tokens list
 						$uidTokens = str_replace($jti.';', '', $uidTokens);
 						if(strlen($uidTokens) > 0) {
@@ -154,19 +106,20 @@ class cron {
 							$this->redis->del('uid:'.$uid);
 						}
 					}
-
-					$k = $this->redis->keys('uid:'.$uid.':mailnbf*'); // Remove mailnbf if expired
-					foreach($k as $v) {
-						$nbf = $this->redis->get($v);
-						if(is_numeric($nbf) && $nbf <= time()) {
-							$this->redis->del($v);
-						}
-					}
 				}
 			}
 		}
 		// Remove data about shared files (it contains only paths in order to improve performances)
 		$keys = $this->redis->keys('shared:*');
+		foreach($keys as $key) {
+			$this->redis->del($key);
+		}
+        // Remove mailnbf and ga
+        $keys = $this->redis->keys('uid:*:mailnbf*');
+		foreach($keys as $key) {
+			$this->redis->del($key);
+		}
+        $keys = $this->redis->keys('uid:*:ga');
 		foreach($keys as $key) {
 			$this->redis->del($key);
 		}
