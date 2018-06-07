@@ -159,6 +159,7 @@ function _deploy(){
 	case $1 in
 		"panel") panel $2;;
 		"rel") rel $2;;
+		"webclient") webclient $2;
 	esac
 }
 
@@ -180,6 +181,15 @@ case $1 in
 		_alert "OK" "New release deployed.
 		Branch: $deployed_branch"||
 		_alert "CRITICAL" "Error while deploying new release."
+		;;
+
+	"--webclient")
+		echo "$(date) :: webclient update" >> $rel_path/log.txt
+		_alert "OK" "Deploying new webclient release..."
+		_deploy "webclient" $2&&
+		_alert "OK" "New release deployed (webclient)
+		Branch: $deployed_branch"||
+		_alert "CRITICAL" "Error while deploying (webclient)."
 		;;
 
 	"--release-rollback")
