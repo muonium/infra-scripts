@@ -159,7 +159,7 @@ function _deploy(){
 	case $1 in
 		"panel") panel $2;;
 		"rel") rel $2;;
-		"webclient") webclient $2;
+		"webclient") webclient $2;;
 	esac
 }
 
