@@ -10,7 +10,7 @@ composer_bin="" # composer executable location (example: /usr/bin/composer)
 function _alert() {
 
 	# check if the alerts are or not disabled
-	if [[ ! "$checkout_enabled" == "yes" ]]; then
+	if [[ ! "$alerts_enabled" == "yes" ]]; then
 		return 0;
 	fi
 
